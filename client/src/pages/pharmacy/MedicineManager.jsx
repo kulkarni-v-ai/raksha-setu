@@ -49,8 +49,8 @@ const MedicineManager = () => {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
       const [medRes, demandRes] = await Promise.all([
-        fetch('http://localhost:5000/api/pharmacy/medicines', { headers }),
-        fetch('http://localhost:5000/api/pharmacy/demands', { headers })
+        fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/pharmacy/medicines', { headers }),
+        fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/pharmacy/demands', { headers })
       ]);
       const meds = medRes.ok ? await medRes.json() : [];
       // Use demo data if API returns empty
@@ -71,7 +71,7 @@ const MedicineManager = () => {
     try {
       const token = localStorage.getItem('token');
       const medObj = updatedMeds.find(m => m.name === name);
-      await fetch('http://localhost:5000/api/pharmacy/medicines', {
+      await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/pharmacy/medicines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(medObj)
@@ -94,7 +94,7 @@ const MedicineManager = () => {
     try {
       const token = localStorage.getItem('token');
       await Promise.all(targets.map(m => 
-        fetch('http://localhost:5000/api/pharmacy/medicines', {
+        fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/pharmacy/medicines', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ ...m, availability: newStatus })
@@ -113,7 +113,7 @@ const MedicineManager = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/pharmacy/medicines/${name}`, {
+      await fetch(`/api/pharmacy/medicines/${name}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -144,7 +144,7 @@ const MedicineManager = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/pharmacy/medicines', {
+      await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/pharmacy/medicines', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

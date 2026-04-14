@@ -54,7 +54,7 @@ const Login = () => {
       if (loginMethod === 'password') {
         if (!loginIdentifier || !loginPassword) return setLoading(false);
         
-        const res = await fetch('http://localhost:5000/api/auth/login-password', {
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/auth/login-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier: loginIdentifier, password: loginPassword })
@@ -80,7 +80,7 @@ const Login = () => {
         // OTP Method
         if (!loginOtpSent) {
           if (!loginIdentifier) return setLoading(false);
-          const res = await fetch('http://localhost:5000/api/auth/send-otp', {
+          const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/auth/send-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: loginIdentifier })
@@ -91,7 +91,7 @@ const Login = () => {
           setMessage(data.message);
         } else {
           if (loginOtp.length < 4) return setLoading(false);
-          const res = await fetch('http://localhost:5000/api/auth/login-otp', {
+          const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/auth/login-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: loginIdentifier, otp: loginOtp })
@@ -124,7 +124,7 @@ const Login = () => {
     try {
       if (!regOtpSent && !regOtpVerified) {
         if (!regName || !regEmail || !regPhone) return setLoading(false);
-        const res = await fetch('http://localhost:5000/api/auth/send-otp', {
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/auth/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: regPhone })
@@ -140,7 +140,7 @@ const Login = () => {
         setMessage('Phone verified internally! Now set your password to finalize.');
       } else if (regOtpVerified) {
         if (regPassword !== regConfirmPassword) throw new Error('Passwords do not match!');
-        const res = await fetch('http://localhost:5000/api/auth/register', {
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 

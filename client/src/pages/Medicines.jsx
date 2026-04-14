@@ -37,7 +37,7 @@ const Medicines = () => {
     if (term.length > 2) {
       setLoading(true);
       try {
-        const url = `http://localhost:5000/api/medicines/search?name=${term}${userLocation ? `&lat=${userLocation.lat}&lng=${userLocation.lng}` : ''}`;
+        const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/medicines/search?name=${term}${userLocation ? `&lat=${userLocation.lat}&lng=${userLocation.lng}` : ''}`;
         const res = await fetch(url);
         const data = await res.json();
         setResults(data.results || []);

@@ -25,7 +25,7 @@ const PharmacyDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/pharmacy/profile', {
+      const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/pharmacy/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

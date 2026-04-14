@@ -135,6 +135,10 @@ const Dashboard = () => {
     setSosStatus('SENT');
     setSosProgress(100);
     setIsSosPressing(false);
+    
+    // Native phone dialer invocation
+    window.location.href = 'tel:112';
+
     // Auto-reset after 5s
     setTimeout(() => {
       setSosStatus('READY');

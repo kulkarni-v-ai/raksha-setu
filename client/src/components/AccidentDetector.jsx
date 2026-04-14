@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { TriangleAlert, XCircle } from 'lucide-react';
-import axios from 'axios';
 
 const AccidentDetector = () => {
   const [detecting, setDetecting] = useState(false);
@@ -110,11 +109,16 @@ const AccidentDetector = () => {
       let uid = "anonymous";
       if (ustr) uid = JSON.parse(ustr).id;
 
-      await axios.post('http://localhost:5000/api/sos', {
-        userId: uid,
-        location: { latitude: lat, longitude: lng }
+      await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/sos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: uid,
+          location: { latitude: lat, longitude: lng }
+        })
       });
       alert('AUTOMATIC SOS HAS BEEN DISPATCHED!');
+      window.location.href = 'tel:112';
     } catch (e) {
       console.error(e);
     }

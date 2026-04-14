@@ -26,6 +26,7 @@ exports.getNearby = async (req, res) => {
   try {
     const { lat, lng } = req.query;
     if (!lat || !lng) {
+      // Fallback if no location is provided
       const hospitals = await Hospital.find({});
       return res.json(hospitals);
     }
@@ -33,7 +34,42 @@ exports.getNearby = async (req, res) => {
     const uLat = parseFloat(lat);
     const uLng = parseFloat(lng);
 
-    const hospitals = await Hospital.find({
+    // 1. First fetch dynamic live hospitals from OpenStreetMap (Overpass API)
+    let liveHospitals = [];
+    try {
+      const radius = 15000; // 15km
+      const query = `[out:json];(node["amenity"="hospital"](around:${radius},${uLat},${uLng});way["amenity"="hospital"](around:${radius},${uLat},${uLng});relation["amenity"="hospital"](around:${radius},${uLat},${uLng}););out center 20;`;
+      
+      const response = await fetch(`https://overpass-api.de/api/interpreter`, {
+        method: 'POST',
+        body: query
+      });
+      const data = await response.json();
+      
+      liveHospitals = data.elements.map(el => {
+        const pLat = el.lat || el.center?.lat;
+        const pLng = el.lon || el.center?.lon;
+        let dist = calculateDistance(uLat, uLng, pLat, pLng);
+        return {
+          _id: el.id.toString(),
+          name: el.tags?.name || 'Emergency Medical Center',
+          address: el.tags?.['addr:full'] || el.tags?.['addr:street'] || 'Unknown Address',
+          phone: el.tags?.phone || el.tags?.['contact:phone'] || 'N/A',
+          emergencyStatus: 'Active',
+          specialties: ['General', 'Emergency'],
+          isVerified: true,
+          location: { type: 'Point', coordinates: [pLng, pLat] },
+          distance: (dist / 1000).toFixed(1) + 'km',
+          coords: { lat: pLat, lng: pLng }
+        };
+      });
+    } catch (apiErr) {
+      console.error("Overpass API err:", apiErr);
+      // Fallback to empty if it fails
+    }
+
+    // 2. Also fetch local database hospitals
+    const localHospitals = await Hospital.find({
       location: {
         $near: {
           $geometry: { type: 'Point', coordinates: [uLng, uLat] },
@@ -41,9 +77,8 @@ exports.getNearby = async (req, res) => {
         }
       }
     });
-    
-    // add distance field for frontend
-    const results = hospitals.map(h => {
+
+    const localFormatted = localHospitals.map(h => {
         let dist = calculateDistance(uLat, uLng, h.location.coordinates[1], h.location.coordinates[0]);
         return {
             ...h.toObject(),
@@ -52,7 +87,20 @@ exports.getNearby = async (req, res) => {
         };
     });
 
-    res.json(results);
+    // Merge both, preferring live ones but including seeded local ones
+    const combined = [...liveHospitals, ...localFormatted].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+    
+    // Deduplicate by name rough checks
+    const unique = [];
+    const names = new Set();
+    for (const h of combined) {
+        if (!names.has(h.name)) {
+            names.add(h.name);
+            unique.push(h);
+        }
+    }
+
+    res.json(unique.slice(0, 50));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
