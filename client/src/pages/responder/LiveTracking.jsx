@@ -55,7 +55,7 @@ const LiveTracking = () => {
     if (!mapInstance.current && mapRef.current && window.L && mission && me) {
       mapInstance.current = window.L.map(mapRef.current, {
         zoomControl: false, attributionControl: false
-      }).setView(me.location || [28.5284, 77.2140], 15);
+      }).setView(me.location || [0, 0], 15);
     }
 
     if (mapInstance.current && window.L) {

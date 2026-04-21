@@ -26,7 +26,7 @@ const ControlDashboard = () => {
   useEffect(() => {
     if (!mapInstance.current && mapRef.current) {
       if (!window.L) return;
-      mapInstance.current = window.L.map(mapRef.current, { zoomControl: false }).setView([28.5244, 77.2100], 13);
+      mapInstance.current = window.L.map(mapRef.current, { zoomControl: false }).setView([0, 0], 13);
       window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapInstance.current);
     }
     

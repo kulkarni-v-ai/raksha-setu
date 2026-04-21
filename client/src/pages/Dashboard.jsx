@@ -15,7 +15,8 @@ const Dashboard = () => {
     const saved = localStorage.getItem('user');
     return saved ? JSON.parse(saved) : { name: "Divya", email: "divya@rakshasetu.in" };
   });
-  const [location, setLocation] = useState("Saket, New Delhi");
+  const [location, setLocation] = useState("Detecting location...");
+  const [gpsCoords, setGpsCoords] = useState(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [sosProgress, setSosProgress] = useState(0);
   const [sosStatus, setSosStatus] = useState('READY'); // READY, ACTIVATING, SENT
@@ -75,17 +76,39 @@ const Dashboard = () => {
     }
   }[lang];
 
-  // Map Initialization
+  // GPS Location Detection
   useEffect(() => {
-    if (!mapInstance.current && mapRef.current) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setGpsCoords(coords);
+          // Reverse geocode for display name
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`)
+            .then(r => r.json())
+            .then(data => {
+              const addr = data.address;
+              setLocation(addr?.suburb || addr?.city_district || addr?.city || addr?.state || 'Your Location');
+            })
+            .catch(() => setLocation('Your Location'));
+        },
+        () => setLocation('Location unavailable'),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, []);
+
+  // Map Initialization (uses GPS)
+  useEffect(() => {
+    if (!mapInstance.current && mapRef.current && gpsCoords) {
       // @ts-ignore (Leaflet global)
-      mapInstance.current = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView([28.5244, 77.2100], 15);
+      mapInstance.current = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView([gpsCoords.lat, gpsCoords.lng], 15);
       // @ts-ignore
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapInstance.current);
       // @ts-ignore
-      L.circleMarker([28.5244, 77.2100], { radius: 8, fillColor: '#2563eb', color: '#fff', weight: 3, fillOpacity: 0.8 }).addTo(mapInstance.current);
+      L.circleMarker([gpsCoords.lat, gpsCoords.lng], { radius: 8, fillColor: '#2563eb', color: '#fff', weight: 3, fillOpacity: 0.8 }).addTo(mapInstance.current);
     }
-  }, []);
+  }, [gpsCoords]);
 
   // Voice Recognition Logic
   useEffect(() => {
@@ -146,18 +169,20 @@ const Dashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch((import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')) + '/api/admin/sos', {
+      const sosLng = gpsCoords?.lng || 0;
+      const sosLat = gpsCoords?.lat || 0;
+      const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/sos', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          userId: user.id || '69dfb6c02a610003c92392b8', // Fallback to Divya
+          userId: user.id,
           type: 'Medical Emergency (Manual Trigger)',
           severity: 'High',
-          location: { type: 'Point', coordinates: [77.2100, 28.5244] }, // Saket coords
-          address: 'Saket, New Delhi'
+          location: { type: 'Point', coordinates: [sosLng, sosLat] },
+          address: location || 'Unknown Location'
         })
       });
       

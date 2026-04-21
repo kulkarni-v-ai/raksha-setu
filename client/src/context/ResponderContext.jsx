@@ -11,7 +11,7 @@ export const ResponderProvider = ({ children }) => {
       id: 'abc123def456', // Matches the mock user id from testing
       name: 'Priya Sharma',
       role: 'Field Responder',
-      location: [28.5284, 77.2140],
+      location: [0, 0],
       status: 'Available'
     }
   ]);
@@ -20,7 +20,7 @@ export const ResponderProvider = ({ children }) => {
     {
       id: 'SOS-9912',
       userName: 'Rahul Verma',
-      userLocation: [28.5355, 77.2644],
+      userLocation: [0, 0],
       address: 'Nehru Place Metro Station, New Delhi',
       phone: '+91 9876543210',
       type: 'Cardiac Arrest',
@@ -32,7 +32,7 @@ export const ResponderProvider = ({ children }) => {
     {
       id: 'SOS-8834',
       userName: 'Anita Sharma',
-      userLocation: [28.5244, 77.2100],
+      userLocation: [0, 0],
       address: 'Saket City Mall, Ground Floor',
       phone: '+91 9876543211',
       type: 'Severe Trauma - Accident',
@@ -44,7 +44,7 @@ export const ResponderProvider = ({ children }) => {
     {
       id: 'SOS-7721',
       userName: 'Vikram Singh',
-      userLocation: [28.5444, 77.2200],
+      userLocation: [0, 0],
       address: 'Hauz Khas Village',
       phone: '+91 9876543212',
       type: 'Fire Burns',
@@ -111,7 +111,7 @@ export const ResponderProvider = ({ children }) => {
       const mappedAlerts = Array.isArray(alerts) ? alerts.map(a => ({
         id: a._id,
         userName: a.userId?.name || 'User',
-        userLocation: a.location?.coordinates ? [a.location.coordinates[1], a.location.coordinates[0]] : [28.5244, 77.2100],
+        userLocation: a.location?.coordinates ? [a.location.coordinates[1], a.location.coordinates[0]] : [0, 0],
         address: a.address || 'Medical Emergency Location',
         phone: a.userId?.phone || 'N/A',
         type: a.address || 'Medical Emergency',
@@ -143,7 +143,7 @@ export const ResponderProvider = ({ children }) => {
           id: r._id,
           name: r.name,
           role: 'Field Responder',
-          location: [28.5284, 77.2140], 
+          location: [0, 0], 
           status: statusMap[r.status] || r.status || 'Available'
         };
       }) : [];
@@ -157,11 +157,8 @@ export const ResponderProvider = ({ children }) => {
     }
   };
 
-  // Static Mock Hospitals for Map Layer
-  const mockHospitals = [
-    { id: 'H1', name: 'Max Super Speciality', location: [28.5280, 77.2100] },
-    { id: 'H2', name: 'AIIMS', location: [28.5672, 77.2100] }
-  ];
+  // Hospitals are now fetched dynamically via GPS + Overpass API
+  const mockHospitals = [];
 
   // Handle incoming SOS (Simulated polling or socket)
   const receiveNewSOS = (alertData) => {

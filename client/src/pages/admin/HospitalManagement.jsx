@@ -91,7 +91,7 @@ const HospitalManagement = () => {
   useEffect(() => {
     if (!mapInstance.current && mapRef.current) {
       // @ts-ignore
-      mapInstance.current = L.map(mapRef.current).setView([28.6139, 77.2090], 11);
+      mapInstance.current = L.map(mapRef.current).setView([20.5937, 78.9629], 11);
       // @ts-ignore
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '©OpenStreetMap'

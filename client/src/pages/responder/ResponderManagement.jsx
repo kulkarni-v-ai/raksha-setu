@@ -27,7 +27,7 @@ const ResponderManagement = () => {
 
   useEffect(() => {
     if (!mapInstance.current && mapRef.current && window.L) {
-      mapInstance.current = window.L.map(mapRef.current, { zoomControl: true }).setView([28.5244, 77.2100], 12);
+      mapInstance.current = window.L.map(mapRef.current, { zoomControl: true }).setView([0, 0], 12);
       window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapInstance.current);
       layerGroup.current = window.L.layerGroup().addTo(mapInstance.current);
       coverageGroup.current = window.L.layerGroup().addTo(mapInstance.current);
@@ -80,7 +80,7 @@ const ResponderManagement = () => {
     if(!formData.name || !formData.phone || !formData.address) return;
     
     setIsGeocoding(true);
-    let newCoords = [28.5244, 77.2100]; // Fallback
+    let newCoords = [0, 0]; // Fallback
 
     try {
         // Nominatim OpenStreetMap Geocoding API
