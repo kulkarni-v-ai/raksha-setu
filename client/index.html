@@ -5,6 +5,33 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Raksha Setu - Smart Emergency Response</title>
+    <!-- GLOBAL ERROR CAPTURE FOR MOBILE WEbVIEW DEBUGGING -->
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        var errBox = document.getElementById('_debug_error_box');
+        if (!errBox) {
+          errBox = document.createElement('div');
+          errBox.id = '_debug_error_box';
+          errBox.style = 'position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.9);color:#fff;z-index:999999;padding:10px;font-size:12px;overflow-y:auto;max-height:50vh;';
+          document.body.prepend(errBox);
+        }
+        errBox.innerHTML += '<p><b>ERR:</b> ' + message + ' at ' + (source?source.split('/').pop():'') + ':' + lineno + ':' + colno + '<br>' + (error ? error.stack : '') + '</p>';
+        return false;
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        var errBox = document.getElementById('_debug_error_box');
+        if (!errBox) {
+          errBox = document.createElement('div');
+          errBox.id = '_debug_error_box';
+          errBox.style = 'position:fixed;top:0;left:0;width:100%;background:rgba(255,100,0,0.9);color:#fff;z-index:999999;padding:10px;font-size:12px;overflow-y:auto;max-height:50vh;';
+          document.body.prepend(errBox);
+        }
+        errBox.innerHTML += '<p><b>PROMISE ERR:</b> ' + (event.reason && event.reason.message ? event.reason.message : String(event.reason)) + '<br>' + (event.reason ? event.reason.stack : '') + '</p>';
+      });
+      console.log = function(...args) {
+        // Optional: you can also capture console.log here, but let's stick to errors.
+      };
+    </script>
     
     <!-- Leaflet.js for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
