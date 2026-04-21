@@ -1,0 +1,35 @@
+services:
+  # 1. Raksha Setu Server (Backend)
+  - type: web
+    name: raksha-setu-api
+    env: node
+    region: singapore
+    plan: free
+    repo: https://github.com/kulkarni-v-ai/raksha-setu
+    branch: main
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  # 2. Raksha Setu Web (React Frontend)
+  - type: web
+    name: raksha-setu-web
+    env: static
+    region: singapore
+    plan: free
+    repo: https://github.com/kulkarni-v-ai/raksha-setu
+    branch: main
+    rootDir: client
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    staticPublishPath: client/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: raksha-setu-api
+          envVarKey: RENDER_EXTERNAL_URL
