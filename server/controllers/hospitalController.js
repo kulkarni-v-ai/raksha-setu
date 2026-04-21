@@ -33,82 +33,39 @@ exports.getNearby = async (req, res) => {
     const uLat = parseFloat(lat);
     const uLng = parseFloat(lng);
 
-    // --- 1. Google Maps Places API (Primary) ---
-    let googleHospitals = [];
-    const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+    // --- 1. OpenStreetMap Overpass API (Primary) ---
+    let overpassHospitals = [];
+    try {
+      const radius = 15000; // 15km
+      const query = `[out:json];(node["amenity"="hospital"](around:${radius},${uLat},${uLng});way["amenity"="hospital"](around:${radius},${uLat},${uLng});relation["amenity"="hospital"](around:${radius},${uLat},${uLng}););out center 20;`;
 
-    if (GOOGLE_API_KEY) {
-      try {
-        const radius = 15000; // 15km
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${uLat},${uLng}&radius=${radius}&type=hospital&key=${GOOGLE_API_KEY}`;
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: query
+      });
+      const data = await response.json();
 
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.status === 'OK' && data.results) {
-          googleHospitals = data.results.map(place => {
-            const pLat = place.geometry.location.lat;
-            const pLng = place.geometry.location.lng;
-            const dist = calculateDistance(uLat, uLng, pLat, pLng);
-
-            return {
-              _id: place.place_id,
-              name: place.name,
-              address: place.vicinity || place.formatted_address || 'Unknown Address',
-              contact: 'N/A',
-              emergencyStatus: place.business_status === 'OPERATIONAL' ? 'Active' : 'Closed',
-              specialities: place.types?.filter(t => !['point_of_interest', 'establishment', 'health'].includes(t)) || ['General'],
-              location: { type: 'Point', coordinates: [pLng, pLat] },
-              distance: (dist / 1000).toFixed(1) + 'km',
-              coords: { lat: pLat, lng: pLng },
-              rating: place.rating || null,
-              totalRatings: place.user_ratings_total || 0,
-              isOpen: place.opening_hours?.open_now ?? true,
-              photos: place.photos?.[0]?.photo_reference || null,
-              googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
-            };
-          });
-        }
-      } catch (apiErr) {
-        console.error('Google Maps API error:', apiErr.message);
-      }
+      overpassHospitals = data.elements.map(el => {
+        const pLat = el.lat || el.center?.lat;
+        const pLng = el.lon || el.center?.lon;
+        const dist = calculateDistance(uLat, uLng, pLat, pLng);
+        return {
+          _id: el.id.toString(),
+          name: el.tags?.name || 'Hospital',
+          address: el.tags?.['addr:full'] || el.tags?.['addr:street'] || 'Unknown Address',
+          contact: el.tags?.phone || el.tags?.['contact:phone'] || 'N/A',
+          emergencyStatus: 'Active',
+          specialities: ['General', 'Emergency'],
+          location: { type: 'Point', coordinates: [pLng, pLat] },
+          distance: (dist / 1000).toFixed(1) + 'km',
+          coords: { lat: pLat, lng: pLng }
+        };
+      });
+    } catch (apiErr) {
+      console.error('Overpass API error:', apiErr.message);
     }
 
-    // --- 2. Fallback: OpenStreetMap Overpass API (if no Google key) ---
-    let fallbackHospitals = [];
-    if (googleHospitals.length === 0) {
-      try {
-        const radius = 15000;
-        const query = `[out:json];(node["amenity"="hospital"](around:${radius},${uLat},${uLng});way["amenity"="hospital"](around:${radius},${uLat},${uLng});relation["amenity"="hospital"](around:${radius},${uLat},${uLng}););out center 20;`;
-
-        const response = await fetch('https://overpass-api.de/api/interpreter', {
-          method: 'POST',
-          body: query
-        });
-        const data = await response.json();
-
-        fallbackHospitals = data.elements.map(el => {
-          const pLat = el.lat || el.center?.lat;
-          const pLng = el.lon || el.center?.lon;
-          const dist = calculateDistance(uLat, uLng, pLat, pLng);
-          return {
-            _id: el.id.toString(),
-            name: el.tags?.name || 'Hospital',
-            address: el.tags?.['addr:full'] || el.tags?.['addr:street'] || 'Unknown Address',
-            contact: el.tags?.phone || el.tags?.['contact:phone'] || 'N/A',
-            emergencyStatus: 'Active',
-            specialities: ['General', 'Emergency'],
-            location: { type: 'Point', coordinates: [pLng, pLat] },
-            distance: (dist / 1000).toFixed(1) + 'km',
-            coords: { lat: pLat, lng: pLng }
-          };
-        });
-      } catch (apiErr) {
-        console.error('Overpass API fallback error:', apiErr.message);
-      }
-    }
-
-    // --- 3. Also fetch local DB hospitals ---
+    // --- 2. Also fetch local DB hospitals ---
     let localHospitals = [];
     try {
       localHospitals = await Hospital.find({
@@ -132,8 +89,8 @@ exports.getNearby = async (req, res) => {
       // No 2dsphere index or empty DB, ignore
     }
 
-    // --- 4. Merge, deduplicate, sort ---
-    const combined = [...googleHospitals, ...fallbackHospitals, ...localHospitals]
+    // --- 3. Merge, deduplicate, sort ---
+    const combined = [...overpassHospitals, ...localHospitals]
       .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
 
     const unique = [];
