@@ -122,6 +122,23 @@ const Hospitals = () => {
         </div>
       </header>
 
+      {/* Emergency Call Banner */}
+      <a 
+        href="tel:112" 
+        onClick={() => navigator.vibrate?.([100, 50, 100])}
+        className="glassmorphism animate-slide-up"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: 'white', padding: '0.85rem 1rem', borderRadius: '1rem',
+          marginBottom: '1rem', textDecoration: 'none', fontWeight: 700,
+          fontSize: '0.95rem', boxShadow: '0 4px 20px rgba(239,68,68,0.35)',
+          animation: 'pulse 2s infinite'
+        }}
+      >
+        <Phone size={20} /> Call Emergency — 112
+      </a>
+
       <div className="search-wrap animate-slide-up" style={{ animationDelay: '0.1s', marginBottom: '1.25rem' }}>
         <div className="search-box glassmorphism" style={{ padding: '0.5rem 0.85rem' }}>
           <Search size={16} className="search-icon" />
@@ -184,14 +201,22 @@ const Hospitals = () => {
                   <Star size={12} fill="#f59e0b" color="#f59e0b" /> {h.rating} 
                 </div>
               </div>
-              <div className="h-actions" style={{ marginLeft: '1rem' }}>
-                <a href={`tel:${h.phone}`} className="call-btn" style={{ background: '#f0fdf4' }}>
+              <div className="h-actions" style={{ marginLeft: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <a 
+                  href={`tel:${h.phone}`} 
+                  className="call-btn" 
+                  style={{ background: '#f0fdf4', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  onClick={() => navigator.vibrate?.([50])}
+                >
                   <Phone size={18} color="#10b981" />
                 </a>
                 <button 
                   className="nav-btn" 
-                  style={{ background: '#eff6ff' }}
-                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, '_blank')}
+                  style={{ background: '#eff6ff', padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  onClick={() => {
+                    navigator.vibrate?.([50]);
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, '_blank');
+                  }}
                 >
                   <Navigation size={18} color="#3b82f6" />
                 </button>

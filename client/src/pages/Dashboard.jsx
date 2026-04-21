@@ -139,10 +139,14 @@ const Dashboard = () => {
   const startSosPress = () => {
     setIsSosPressing(true);
     setSosStatus('ACTIVATING');
+    // Haptic feedback on press start
+    navigator.vibrate?.([50]);
     let progress = 0;
     sosInterval.current = setInterval(() => {
-      progress += 2; // ~1.5 - 2s hold for better feel
+      progress += 2;
       setSosProgress(progress);
+      // Continuous haptic pulses while holding
+      if (progress % 20 === 0) navigator.vibrate?.([30]);
       if (progress >= 100) {
         clearInterval(sosInterval.current);
         triggerSOS();
@@ -162,7 +166,8 @@ const Dashboard = () => {
   const triggerSOS = async () => {
     if (sosStatus === 'SENT') return;
     
-    navigator.vibrate?.([200, 100, 200]);
+    // Strong haptic burst on SOS dispatch
+    navigator.vibrate?.([300, 100, 300, 100, 500]);
     setSosStatus('SENT');
     setSosProgress(100);
     setIsSosPressing(false);
@@ -187,7 +192,6 @@ const Dashboard = () => {
       });
       
       if (res.ok) {
-        // Add to dynamic alerts
         const newAlert = {
           id: Date.now(),
           type: 'emergency',
@@ -200,7 +204,12 @@ const Dashboard = () => {
       console.error('SOS fetch failed', err);
     }
 
-    // Keep it in 'SENT' status for longer (2 mins) to avoid 'malfunction' feel
+    // Open native phone dialer with emergency number (112 for India)
+    setTimeout(() => {
+      window.location.href = 'tel:112';
+    }, 1500);
+
+    // Reset SOS after 2 mins
     setTimeout(() => {
       setSosStatus('READY');
       setSosProgress(0);
